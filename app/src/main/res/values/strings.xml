@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Bullshit: The Card Game</string>
-    <string name="edit_message">Enter a message</string>
-    <string name="button_send">Send</string>
+    <string name="title_message">Bullshit!</string>
+    <string name="button_directions">How to Play?</string>
+    <string name="button_join">Join Server</string>
+    <string name="button_host">Host Server</string>
 </resources>
