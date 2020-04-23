@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">Bullshit: The Card Game</string>
     <string name="title_message">Bullshit!</string>
-    <string name="button_directions">How to Play?</string>
+    <string name="button_directions">How to Play</string>
     <string name="button_join">Join Server</string>
     <string name="button_host">Host Server</string>
+    <string name="button_home">Home</string>
+    <string name="how_to_play">"The goal of Bullshit is to get rid of your cards first. To accomplish this, the player's will have to bluff about the cards in their hand. The play of the game goes by card number, first ace,  then two's, three's, four's, five's, and until we reach the Kings. During the game, each player will place how many cards they have of that number on their turn. They may lie and put a different card of a different number into the deck on their turn. If you believe that a player was lying, you call Bullshit! before the next player's turn begins. If you are right (the player you accused did lie) then that player gets all the cards in the pile. If you are wrong, then you get all the cards in the pile." </string>
+
 </resources>
