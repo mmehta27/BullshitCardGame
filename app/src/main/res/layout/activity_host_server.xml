@@ -8,7 +8,7 @@
     tools:context=".HostServer">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/hostTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/alegreya_sans_sc_bold"

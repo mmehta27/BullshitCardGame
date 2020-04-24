@@ -3,6 +3,8 @@ package com.example.bullshitcardgame;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class HowToPlay extends AppCompatActivity {
