@@ -11,6 +11,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".JoinServer"></activity>
         <activity android:name=".HostServer" />
+        <activity android:name=".GameActivity" />
         <activity android:name=".HowToPlay" />
         <activity android:name=".MainActivity">
             <intent-filter>
