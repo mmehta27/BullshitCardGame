@@ -38,3 +38,48 @@ for (var i = 0; i < 4; i++) {
 
 
 
+var IdAccum = 0;
+var lastClaim = new Array();
+var discards = new Array();
+
+function isBS() {
+   for (var i = lastClaim.length - 1; i >= 0; i--) {
+      if (lastClaim[i] != discards[discards.length - lastClaim.length + i]) {
+          return false;
+      }
+      return true;
+   }
+}
+
+io.on('connection', function (socket) {
+  var playerID = IdAccum;
+  IdAccum ++;
+  if (IdAccum == 3) {
+   io.sockets.emit('startGame');
+  }
+  IdAccum = IdAccum % 4;
+  socket.emit('decks', decks);
+  socket.on('update', function(sentCards, claim) {
+       io.sockets.emit('claim', claim, playerID);
+       for (var i = 0; i < sentCards.length; i++) {
+        discards.push(sentCards[i]);
+        lastClaim = claim;
+        IdAccum = playerID + 1;
+        IdAccum = IdAccum % 4;
+        io.sockets.emit('callPlayer', IdAccum);
+       }
+    });
+  socket.on('bs') {
+       if (isBS() === true) {
+           io.sockets.emit('bs', (IdAccum - 1) % 4, discards);
+           discards = new Array();
+           
+       } else {
+           io.sockets.emit('U Fd up M8', discards, playerID);
+       }
+    });
+ 
+});
+
+
+
