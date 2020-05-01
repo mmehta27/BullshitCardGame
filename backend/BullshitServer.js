@@ -58,10 +58,13 @@ function isBS() {
 io.on('connection', function (socket) {
   //Identify each player with a unique ID
   var playerID = IdAccum;
+  
+  io.sockets.emit('newPlayer');
+  socket.emit('ID', playerID);
   IdAccum ++;
  
   // Four players ready, game can begin
-  if (IdAccum == 4) {
+  if (IdAccum === 4) {
    io.sockets.emit('startGame');
   }
   IdAccum = IdAccum % 4;
@@ -74,16 +77,16 @@ io.on('connection', function (socket) {
        io.sockets.emit('claim', claim, playerID);
        for (var i = 0; i < sentCards.length; i++) {
         
-        //update state of game
-        
-        discards.push(sentCards[i]);
+         discards.push(sentCards[i]);
+       }
+       //update state of game
         lastClaim = claim;
         IdAccum = playerID + 1;
         IdAccum = IdAccum % 4;
         
         //let next player know its his turn to play
         io.sockets.emit('callPlayer', IdAccum);
-       }
+       
     });
   //When a BS claim is made...
   socket.on('bs') {
