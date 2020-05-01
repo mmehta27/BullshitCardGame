@@ -15,6 +15,9 @@ import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 import com.github.nkzawa.emitter.Emitter;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 
 public class GameActivity extends AppCompatActivity {
 
