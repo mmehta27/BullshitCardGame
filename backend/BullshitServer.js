@@ -29,7 +29,7 @@ var decks = new Array();
 
 for (var i = 0; i < 4; i++) {
   decks.push(new Array());
-  for (int j = 0; j <= 13; j++) {
+  for (int j = 0; j < 13; j++) {
     int temp= Math.floor(cardsList.length * Math.random());
     decks[i].push(cardsList[temp]);
     cardsList.splice(temp, 1);
@@ -92,7 +92,7 @@ io.on('connection', function (socket) {
   socket.on('bs') {
        if (isBS() === true) {
            //is claim is true, tell all players that perpetrater gets his cards back
-           io.sockets.emit('bs', (IdAccum - 1) % 4, discards);
+           io.sockets.emit('bs', (IdAccum - 1) % 4, discards, playerID);
            discards = new Array();
            
        } else {
