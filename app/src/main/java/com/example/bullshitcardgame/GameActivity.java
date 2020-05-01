@@ -11,12 +11,19 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+import com.github.nkzawa.emitter.Emitter;
+
+
 public class GameActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        //declare socket connection variable
+        private Socket mSocket;
         //Create ImageView variable and TextView variable for each card
         final ImageView ace = this.findViewById(R.id.ace);
         final TextView aceCardNumber = this.findViewById(R.id.aceNumber);
@@ -58,6 +65,20 @@ public class GameActivity extends AppCompatActivity {
         setText(jack, jackCardNumber, 4);
         setText(queen, queenCardNumber, 4);
         setText(king, kingCardNumber, 4);
+        
+        //connect socket to server
+        mSocket = IO.socket( "http://3.19.228.205:420");
+        
+        //set socket event listeners
+        mSocket.on("newPlayer", addPlayer);
+        mSocket.on("ID", setID);
+        mSocket.on("startGame", startGame);
+        mSocket.on("decks", setDecks);
+        mSocket.on("claim", updateGame);
+        mSocket.on("callPlayer", shouldPlay);
+        mSocket.on("bs", onTrueBS);
+        mSocket.on("U Fd up M8", onFalseBS);
+        
         //Made all cards clickable
         ace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,4 +203,98 @@ public class GameActivity extends AppCompatActivity {
             cardNumber.setText("Number of Cards: " + numberOfCards);
         }
     }
+    
+    //Delineate responses to socket messages
+    
+     private Emitter.Listener addPlayer = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            int totalPlayers = (int) args[0];
+            
+            //Notify UI that a new player has joined the game, totalPlayers = num of player connected, game will start on 4
+        }
+    };
+    
+    private Emitter.Listener setID = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            int playerID = (int) args[0];
+            
+            //@playerID - this local player's global ID
+            //set local player ID to playerID, ranges on 0 - 3, used when updated server
+        }
+    };
+    
+    private Emitter.Listener startGame = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            
+            //Notify UI that game is ready to start; four players have joined server
+        }
+    };
+    
+    private Emitter.Listener setDecks = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            JSONArray decks = (JSONArray) args[0];
+            
+            //@decks - 2d (4 by 13, respectivly), JSONArray type (the one we did NOT use in class). First dimension consists of 4 length 13 JSONArrays
+            // ordered by the server - identified playerID in the prior listeners. So the first length 13 array belongs to the player
+            // with playerID 0. These represent that player's cards, with each element bearing a String type value of form "num" + "letter".
+            // As an example, three of spades is "3s", Ace of heatrs is "1h", and king of diamonds is "13d". clubs maps to "c".
+            
+            //use this info to update UI
+            
+        }
+    };
+    
+    private Emitter.Listener updateGame = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            String claim = (String) args[0];
+            int IDOfClaim = (int) args[1];
+            
+            //@claim - String of form "num" + "num", representing move made by last player. Ex: Given player exclaimed "2 Queens",
+            // claim = "212". Similarly, 4 Aces would be "41"
+            
+            //@IDOfClaim - player ID of subject who played, ignore if ID matches local ID as player already trivially knows his play
+            
+            //use this info to notify player of change
+        }
+    };
+    
+    private Emitter.Listener shouldPlay = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            int IDtoPlay = (int) args[0];
+            //@IDtoPlayer- ID of next player to play; if such matches local ID, notify player to cast cards and play
+        }
+    };
+    
+    private Emitter.Listener onTrueBS = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            int unluckyPlayer = (int) args[0];
+            JSONArray cardsToRecieve = (JSONArray) args[1];
+            int callerID = (int) args[2];
+            //@unluckyPlayer - player to get deck of cards resultant to call
+            //@carsToRecieve - JSONArray of card IDs to be taken by unluckyPlayer. Ex: ["1d". "6s", "11d"] for a stack of 
+            // Ace of diamonds, six of spades and jack of diamonds
+            //@callerID - player ID of subject who got justly called on BS
+            
+            //use info to update UI gamestate, notify the player that BS call was successful
+        }
+    };
+    
+    private Emitter.Listener onFalseBS = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            JSONArray cardsToReceive = (int) args[0];
+            int callerID = (int) args[1];
+            // both params the same as above
+            
+            //use this info to return quantity of cards to player who flsely called BS (callerID)
+        }
+    };
+    
 }
