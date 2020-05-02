@@ -9,8 +9,8 @@ app.get('/', function(req, res) {
     res.send('Ooof, you have found our server; download the Bullshit app to play');
 });
 
-server.listen(420, ()=>{
-    console.log('Bullshit server is live on 420');
+server.listen(4200, ()=>{
+    console.log('Bullshit server is live on 4200');
 });
 
 //set up list of cards to derive deck from
