@@ -132,7 +132,7 @@ public class GameActivity extends AppCompatActivity {
         playerTurn.setText("Player null turn");
         //connect socket to server
         try {
-            mSocket = IO.socket("http://192.168.86.26:420"); //"http://3.19.228.205:420"
+            mSocket = IO.socket("http://3.19.228.205:4200");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
