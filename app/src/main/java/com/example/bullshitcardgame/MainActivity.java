@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,22 +23,13 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(startDescriptionPage);
             }
         });
-        //Opens join server layout
-        Button joinServer = MainActivity.this.findViewById(R.id.join_server);
-        joinServer.setOnClickListener(new View.OnClickListener() {
+        //Opens game layout
+        Button playGame = MainActivity.this.findViewById(R.id.play_game);
+        playGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent startJoinServerPage = new Intent(MainActivity.this, JoinServer.class);
-                startActivity(startJoinServerPage);
-            }
-        });
-        //Opens host game layout
-        Button hostServer = MainActivity.this.findViewById(R.id.host_server);
-        hostServer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent startHostServerPage = new Intent(MainActivity.this, HostServer.class);
-                startActivity(startHostServerPage);
+                Intent startGame = new Intent(MainActivity.this, GameActivity.class);
+                startActivity(startGame);
             }
         });
     }

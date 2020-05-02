@@ -6,17 +6,17 @@
  
  
 app.get('/', function(req, res) {
-res.send('Ooof, you have found our server; download the Bullshit app to play')
-})
+    res.send('Ooof, you have found our server; download the Bullshit app to play');
+});
 
-server.listen(420,()=>{
-console.log('Bullshit server is live on port 420')
+server.listen(420, ()=>{
+    console.log('Bullshit server is live on 420');
 });
 
 //set up list of cards to derive deck from
 
 var cardsList = new Array();
-for (var i = 2; i <= 14; i++) {
+for (var i = 1; i <= 13; i++) {
   cardsList.push(i + "h");
   cardsList.push(i + "c");
   cardsList.push(i + "s");
@@ -29,8 +29,8 @@ var decks = new Array();
 
 for (var i = 0; i < 4; i++) {
   decks.push(new Array());
-  for (int j = 0; j < 13; j++) {
-    int temp= Math.floor(cardsList.length * Math.random());
+  for (var j = 0; j < 13; j++) {
+    var temp= Math.floor(cardsList.length * Math.random());
     decks[i].push(cardsList[temp]);
     cardsList.splice(temp, 1);
     }
@@ -61,7 +61,7 @@ io.on('connection', function (socket) {
   
   io.sockets.emit('newPlayer');
   socket.emit('ID', playerID);
-  IdAccum ++;
+  IdAccum++;
  
   // Four players ready, game can begin
   if (IdAccum === 4) {
@@ -89,7 +89,7 @@ io.on('connection', function (socket) {
        
     });
   //When a BS claim is made...
-  socket.on('bs') {
+  socket.on('bs', function() {
        if (isBS() === true) {
            //is claim is true, tell all players that perpetrater gets his cards back
            io.sockets.emit('bs', (IdAccum - 1) % 4, discards, playerID);
