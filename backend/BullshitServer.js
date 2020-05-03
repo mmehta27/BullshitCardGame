@@ -73,6 +73,7 @@ io.on('connection', function (socket) {
   // Four players ready, game can begin
   if (IdAccum === 4) {
    io.sockets.emit('startGame');
+   io.sockets.emit('callPlayer', 0);
   }
   IdAccum = IdAccum % 4;
   // give the player the decks, all but his will be hidden by app
