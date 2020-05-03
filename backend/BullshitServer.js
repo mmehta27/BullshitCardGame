@@ -101,7 +101,11 @@ io.on('connection', function (socket) {
          discards.push(sentCards[i]);
        }
        //update state of game
-        cardToPlay ++;
+        if (cardToPlay === 13) {
+          cardToPlay = 1; 
+        } else {
+          cardToPlay ++;
+        }
         IdAccum = playerID + 1;
         IdAccum = IdAccum % 4;
         
