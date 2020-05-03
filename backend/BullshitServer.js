@@ -17,10 +17,10 @@ server.listen(4200, ()=>{
 
 var cardsList = new Array();
 for (var i = 1; i <= 13; i++) {
-  cardsList.push(i + "h");
-  cardsList.push(i + "c");
-  cardsList.push(i + "s");
-  cardsList.push(i + "d");
+  cardsList.push(i);
+  cardsList.push(i);
+  cardsList.push(i);
+  cardsList.push(i);
 }
 
 // partition four random decks amongst four players
@@ -40,15 +40,15 @@ for (var i = 0; i < 4; i++) {
 //ID of person to play next
 var IdAccum = 0;
 //last set of deposited cards
-var lastClaim = new Array();
+var lastClaim = "";
 //total central discarded deck
 var discards = new Array();
 
 
 //return false if last claim was false
 function isBS() {
-   for (var i = lastClaim.length - 1; i >= 0; i--) {
-      if (lastClaim[i] != discards[discards.length - lastClaim.length + i]) {
+   for (var i = parseInt(lastClaim.charAt(0)) - 1; i >= 0; i--) {
+      if (parseInt(lastClaim.substring(1)) != discards[discards.length - parseInt(lastClaim.charAt(0)) + i]) {
           return false;
       }
       return true;
