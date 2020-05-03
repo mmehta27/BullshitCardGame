@@ -74,6 +74,7 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function() {
       io.sockets.emit('playerExit', playerID);
       IdAccum--;
+      IdAccum = IdAccum % 4;
       console.log('player left');
   });
  
