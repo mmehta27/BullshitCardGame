@@ -23,6 +23,8 @@ for (var i = 1; i <= 13; i++) {
   cardsList.push(i);
 }
 
+
+
 // partition four random decks amongst four players
 
 var decks = new Array();
@@ -35,6 +37,8 @@ for (var i = 0; i < 4; i++) {
     cardsList.splice(temp, 1);
     }
 }
+
+console.log(decks);
 
 
 //ID of person to play next
@@ -85,6 +89,8 @@ io.on('connection', function (socket) {
   socket.on('update', function(sentCards, claim) {
        console.log('update');
        console.log(IdAccum);
+       console.log(sentCards);
+       console.log(claim);
        //tell all other players about his claim
        io.sockets.emit('claim', claim, playerID);
        for (var i = 0; i < sentCards.length; i++) {
@@ -115,6 +121,7 @@ io.on('connection', function (socket) {
        } else {
            //else tell everyone the claim was false, an proclaimer gets all the central cards
            io.sockets.emit('U Fd up M8', discards, playerID);
+          discards = new Array();
        }
     });
  
