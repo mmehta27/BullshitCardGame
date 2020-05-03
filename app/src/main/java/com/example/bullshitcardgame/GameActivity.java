@@ -1,15 +1,14 @@
 package com.example.bullshitcardgame;
 
 import android.content.Context;
-import android.media.Image;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,7 +62,7 @@ public class GameActivity extends AppCompatActivity {
     private Button submitCards;
     private ImageView callBS;
     private TextView playerTurn;
-    private List<String> cardsToSubmit = new ArrayList<>();
+    private List<Integer> cardsToSubmit = new ArrayList<>();
     private int playerID;
 
     @Override
@@ -100,19 +99,19 @@ public class GameActivity extends AppCompatActivity {
         kingCardNumber = this.findViewById(R.id.kingNumber);
 
         //Set number of cards
-        setText(ace, aceCardNumber, 1);
-        setText(two, twoCardNumber, 1);
-        setText(three, threeCardNumber, 1);
-        setText(four, fourCardNumber, 1);
-        setText(five, fiveCardNumber, 1);
-        setText(six, sixCardNumber, 1);
-        setText(seven, sevenCardNumber, 1);
-        setText(eight, eightCardNumber, 1);
-        setText(nine, nineCardNumber, 1);
-        setText(ten, tenCardNumber, 1);
-        setText(jack, jackCardNumber, 1);
-        setText(queen, queenCardNumber, 1);
-        setText(king, kingCardNumber, 1);
+        setText(ace, aceCardNumber, 0);
+        setText(two, twoCardNumber, 0);
+        setText(three, threeCardNumber, 0);
+        setText(four, fourCardNumber, 0);
+        setText(five, fiveCardNumber, 0);
+        setText(six, sixCardNumber, 0);
+        setText(seven, sevenCardNumber, 0);
+        setText(eight, eightCardNumber, 0);
+        setText(nine, nineCardNumber, 0);
+        setText(ten, tenCardNumber, 0);
+        setText(jack, jackCardNumber, 0);
+        setText(queen, queenCardNumber, 0);
+        setText(king, kingCardNumber, 0);
 
         //Make gameLog scrollable
         gameLog = this.findViewById(R.id.gameLog);
@@ -133,6 +132,7 @@ public class GameActivity extends AppCompatActivity {
         //connect socket to server
         try {
             mSocket = IO.socket("http://3.19.228.205:4200");
+            mSocket.connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -151,85 +151,86 @@ public class GameActivity extends AppCompatActivity {
         ace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(ace, aceCardNumber, "1");
+                howMany(ace, aceCardNumber, 1);
             }
         });
         two.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(two, twoCardNumber, "2");
+                howMany(two, twoCardNumber, 2);
             }
         });
         three.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(three, threeCardNumber, "3");
+                howMany(three, threeCardNumber, 2);
             }
         });
         four.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(four, fourCardNumber, "4");
+                howMany(four, fourCardNumber, 4);
             }
         });
         five.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(five, fiveCardNumber, "5");
+                howMany(five, fiveCardNumber, 5);
             }
         });
         six.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(six, sixCardNumber, "6");
+                howMany(six, sixCardNumber, 6);
             }
         });
         seven.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(seven, sevenCardNumber, "7");
+                howMany(seven, sevenCardNumber, 7);
             }
         });
         eight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(eight, eightCardNumber, "8");
+                howMany(eight, eightCardNumber, 8);
             }
         });
         nine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(nine, nineCardNumber, "9");
+                howMany(nine, nineCardNumber, 9);
             }
         });
         ten.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(ten, tenCardNumber, "10");
+                howMany(ten, tenCardNumber, 10);
             }
         });
         jack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(jack, jackCardNumber, "11");
+                howMany(jack, jackCardNumber, 11);
             }
         });
         queen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(queen, queenCardNumber, "12");
+                howMany(queen, queenCardNumber, 12);
             }
         });
         king.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(king, kingCardNumber, "13");
+                howMany(king, kingCardNumber, 13);
             }
         });
         callBS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //Call server to check BS
+                mSocket.emit("bs");
                 Toast.makeText(GameActivity.this, "BS!", Toast.LENGTH_SHORT).show();
             }
         });
@@ -237,11 +238,12 @@ public class GameActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //Call server to show cards user played. --> send cardsToSubmit List
+                mSocket.emit("update", cardsToSubmit);
             }
         });
     }
 
-    private void howMany(final ImageView card, final TextView cardNumber, final String cardType) {
+    private void howMany(final ImageView card, final TextView cardNumber, final int cardType) {
         AlertDialog.Builder buildDialog = new AlertDialog.Builder(GameActivity.this);
         View promptCardNumber = getLayoutInflater().inflate(R.layout.number_of_cards, null, false);
         buildDialog.setView(promptCardNumber);
@@ -253,20 +255,26 @@ public class GameActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String cardsSubmit = numberCards.getText().toString() + cardType;
+                //String cardsSubmit = numberCards.getText().toString() + cardType;
                 int currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 1));
                 int input = Integer.parseInt(numberCards.getText().toString());
                 if (currentNumberCards - input == 0) {
                     //Toast.makeText(GameActivity.this, cardsSubmit, Toast.LENGTH_SHORT).show();
                     card.setVisibility(View.INVISIBLE);
                     cardNumber.setVisibility(View.INVISIBLE);
-                    cardsToSubmit.add(cardsSubmit);
+                    //cardsToSubmit.add(cardsSubmit);
+                    for (int index = 0; index < input; index++) {
+                        cardsToSubmit.add(cardType);
+                    }
                 } else if (currentNumberCards - input < 0) {
                     Toast.makeText(GameActivity.this, "Can't play that many cards!", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(GameActivity.this, cardsSubmit, Toast.LENGTH_SHORT).show();
                     cardNumber.setText("Number of Cards: " + (currentNumberCards - input));
-                    cardsToSubmit.add(cardsSubmit);
+                    //cardsToSubmit.add(cardsSubmit);
+                    for (int index = 0; index < input; index++) {
+                        cardsToSubmit.add(cardType);
+                    }
                 }
                 cardNumberPrompt.dismiss();
             }
@@ -282,33 +290,71 @@ public class GameActivity extends AppCompatActivity {
 
     private int numberOfCards(final TextView cardNumber) {
         if (cardNumber.getVisibility() == View.VISIBLE) {
-            int currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 1));
+            int currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 2));
+            Toast.makeText(GameActivity.this, "Number of Cards: " + currentNumberCards, Toast.LENGTH_LONG).show();
             return currentNumberCards;
         } else {
             return 0;
         }
     }
 
-    private void setText(final ImageView card, final TextView cardNumber, int numberOfCards) {
-        if (numberOfCards <= 0) {
-            card.setVisibility(View.INVISIBLE);
-            cardNumber.setVisibility(View.INVISIBLE);
-        } else {
-            card.setVisibility(View.VISIBLE);
-            card.setVisibility(View.VISIBLE);
-            cardNumber.setText("Number of Cards: " + numberOfCards);
-        }
+    private void setText(final ImageView card, final TextView cardNumber, final int numberOfCards) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (numberOfCards <= 0) {
+                    card.setVisibility(View.INVISIBLE);
+                    //cardNumber.setText("Number of Cards: " + 0);
+                    cardNumber.setVisibility(View.INVISIBLE);
+                } else {
+                    int currentNumberCards = 0;
+                    if (card.getVisibility() == View.INVISIBLE) {
+                        currentNumberCards = numberOfCards;
+                    } else {
+                        currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 1)) + numberOfCards;
+                    }
+                    card.setVisibility(View.VISIBLE);
+                    cardNumber.setVisibility(View.VISIBLE);
+                    cardNumber.setText("Number of Cards: " + currentNumberCards);
+                }
+            }
+        });
     }
-    
+
+    private void updateGameLogGame(final int id, final boolean plural, final String cardNumber, final String card) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (plural == true) {
+                    gameLog.append("Player " + id + " played: " + cardNumber + " " + card + "'s !\n");
+                } else {
+                    gameLog.append("Player " + id + " played: " + cardNumber + " " + card + "!\n");
+                }
+            }
+        });
+    }
+    private void updatePlayerTurn(final boolean whoseTurn, final int id) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (whoseTurn == true) {
+                    playerTurn.setText("Player " + playerID + "'s turn!");
+                    submitCards.setVisibility(View.VISIBLE);
+                    vibrate.vibrate(400);
+                } else {
+                    playerTurn.setText("Player " + id + "'s turn!");
+                    submitCards.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+    }
     //Delineate responses to socket messages
     
      private Emitter.Listener addPlayer = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
             int totalPlayers = (int) args[0];
-            if (totalPlayers < 4) {
-                gameLog.append("Player " + playerID + " has joined!\n");
-            }
+            gameLog.append("A new player has joined!\n");
             //Notify UI that a new player has joined the game, totalPlayers = num of player connected, game will start on 4
         }
     };
@@ -317,6 +363,7 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void call(final Object... args) {
             playerID = (int) args[0];
+            gameLog.append("You are Player " + playerID + "\n");
             //@playerID - this local player's global ID
             //set local player ID to playerID, ranges on 0 - 3, used when updated server
         }
@@ -335,7 +382,7 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void call(final Object... args) {
             JSONArray decks = (JSONArray) args[0];
-            
+
             //@decks - 2d (4 by 13, respectivly), JSONArray type (the one we did NOT use in class). First dimension consists of 4 length 13 JSONArrays
             // ordered by the server - identified playerID in the prior listeners. So the first length 13 array belongs to the player
             // with playerID 0. These represent that player's cards, with each element bearing a String type value of form "num" + "letter".
@@ -343,51 +390,50 @@ public class GameActivity extends AppCompatActivity {
             //use this info to update UI
             try {
                 JSONArray playersDeck = decks.getJSONArray(playerID);
+                int length = playersDeck.length();
                 for (int index = 0; index < playersDeck.length(); index++) {
                     String cardName = playersDeck.get(index).toString();
-                    int cardNumber = Integer.parseInt(cardName.substring(0, cardName.length() - 1));
+                    int cardNumber = Integer.parseInt(cardName);
                     switch (cardNumber) {
                         case 1:
-                            setText(ace, aceCardNumber, numberOfCards(aceCardNumber));
+                            setText(ace, aceCardNumber, 1);
                             break;
                         case 2:
-                            setText(two, twoCardNumber, numberOfCards(twoCardNumber));
+                            setText(two, twoCardNumber, 1);
                             break;
                         case 3:
-                            setText(three, threeCardNumber, numberOfCards(threeCardNumber));
+                            setText(three, threeCardNumber, 1);
                             break;
                         case 4:
-                            setText(four, fourCardNumber, numberOfCards(fourCardNumber));
+                            setText(four, fourCardNumber, 1);
                             break;
                         case 5:
-                            setText(five, fiveCardNumber, numberOfCards(fiveCardNumber));
+                            setText(five, fiveCardNumber, 1);
                             break;
                         case 6:
-                            setText(six, sixCardNumber, numberOfCards(sixCardNumber));
+                            setText(six, sixCardNumber, 1);
                             break;
                         case 7:
-                            setText(seven, sevenCardNumber, numberOfCards(sevenCardNumber));
+                            setText(seven, sevenCardNumber, 1);
                             break;
                         case 8:
-                            setText(eight, eightCardNumber, numberOfCards(eightCardNumber));
+                            setText(eight, eightCardNumber, 1);
                             break;
                         case 9:
-                            setText(nine, nineCardNumber, numberOfCards(nineCardNumber));
+                            setText(nine, nineCardNumber, 1);
                             break;
                         case 10:
-                            setText(ten, tenCardNumber, numberOfCards(tenCardNumber));
+                            setText(ten, tenCardNumber, 1);
                             break;
                         case 11:
-                            setText(jack, jackCardNumber, numberOfCards(jackCardNumber));
+                            setText(jack, jackCardNumber, 1);
                             break;
                         case 12:
-                            setText(queen, queenCardNumber, numberOfCards(queenCardNumber));
+                            setText(queen, queenCardNumber, 1);
                             break;
                         case 13:
-                            setText(king, kingCardNumber, numberOfCards(kingCardNumber));
+                            setText(king, kingCardNumber, 1);
                             break;
-                        default:
-                            Toast.makeText(GameActivity.this, "Could not find card", Toast.LENGTH_SHORT).show();
                     }
                 }
             } catch (JSONException e) {
@@ -401,58 +447,62 @@ public class GameActivity extends AppCompatActivity {
         public void call(final Object... args) {
             String claim = (String) args[0];
             int IDOfClaim = (int) args[1];
-            
+            //gameLog.append("Player " + IDOfClaim + " played: " + claim.substring(0, 1) + " " + 1 + "!\n");
             //@claim - String of form "num" + "num", representing move made by last player. Ex: Given player exclaimed "2 Queens",
             // claim = "212". Similarly, 4 Aces would be "41"
             //use this info to notify player of change
-            String cardType = claim.substring(1);
-            switch (cardType) {
-                case "1":
-                    cardType = "Ace";
-                    break;
-                case "2":
-                    cardType = "Two";
-                    break;
-                case "3":
-                    cardType = "Three";
-                    break;
-                case "4":
-                    cardType = "Four";
-                    break;
-                case "5":
-                    cardType = "Five";
-                    break;
-                case "6":
-                    cardType = "Six";
-                    break;
-                case "7":
-                    cardType = "Seven";
-                    break;
-                case "8":
-                    cardType = "Eight";
-                    break;
-                case "9":
-                    cardType = "Nine";
-                    break;
-                case "10":
-                    cardType = "Ten";
-                    break;
-                case "11":
-                    cardType = "Jack";
-                    break;
-                case "12":
-                    cardType = "Queen";
-                    break;
-                case "13":
-                    cardType = "King";
-                    break;
-                default:
-                    cardType = "Card Not Found";
-            }
-            if (Integer.parseInt(claim.substring(0, 1)) <= 1) {
-                gameLog.append("Player " + IDOfClaim + " played: " + claim.substring(0, 1) + " " + cardType + "!\n");
-            } else {
-                gameLog.append("Player " + IDOfClaim + " played: " + claim.substring(0, 1) + " " + cardType + "'s!\n");
+            try {
+                String cardType = claim.substring(1);
+                switch (cardType) {
+                    case "1":
+                        cardType = "Ace";
+                        break;
+                    case "2":
+                        cardType = "Two";
+                        break;
+                    case "3":
+                        cardType = "Three";
+                        break;
+                    case "4":
+                        cardType = "Four";
+                        break;
+                    case "5":
+                        cardType = "Five";
+                        break;
+                    case "6":
+                        cardType = "Six";
+                        break;
+                    case "7":
+                        cardType = "Seven";
+                        break;
+                    case "8":
+                        cardType = "Eight";
+                        break;
+                    case "9":
+                        cardType = "Nine";
+                        break;
+                    case "10":
+                        cardType = "Ten";
+                        break;
+                    case "11":
+                        cardType = "Jack";
+                        break;
+                    case "12":
+                        cardType = "Queen";
+                        break;
+                    case "13":
+                        cardType = "King";
+                        break;
+                    default:
+                        cardType = "Card Not Found";
+                }
+                if (Integer.parseInt(claim.substring(0, 1)) <= 1) {
+                    updateGameLogGame(IDOfClaim, false, claim.substring(0, 1), cardType);
+                } else {
+                    updateGameLogGame(IDOfClaim, false, claim.substring(0, 1), cardType);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
@@ -462,13 +512,14 @@ public class GameActivity extends AppCompatActivity {
         public void call(final Object... args) {
             int IDtoPlay = (int) args[0];
             //@IDtoPlayer- ID of next player to play; if such matches local ID, notify player to cast cards and play
-            if (IDtoPlay == playerID) {
-                playerTurn.setText("Player " + playerID + "'s turn!");
-                submitCards.setVisibility(View.VISIBLE);
-                vibrate.vibrate(400);
-            } else {
-                playerTurn.setText("Player " + IDtoPlay + "'s turn!");
-                submitCards.setVisibility(View.INVISIBLE);
+            try {
+                if (IDtoPlay == playerID) {
+                    updatePlayerTurn(true, playerID);
+                } else {
+                    updatePlayerTurn(false, IDtoPlay);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
@@ -484,60 +535,58 @@ public class GameActivity extends AppCompatActivity {
             // Ace of diamonds, six of spades and jack of diamonds
             //@callerID - player ID of subject who got justly called on BS
             //use info to update UI gamestate, notify the player that BS call was successful
-            if (unluckyPlayer == playerID) {
-                vibrate.vibrate(400);
-                gameLog.append("Player " + callerID + " correctly called Player " + unluckyPlayer + "'s BS!");
-                try {
-                    for (int index = 0; index < cardsToReceive.length(); index++) {
-                        String cardReceived = cardsToReceive.get(index).toString();
-                        String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
-                        switch (cardNumber) {
-                            case "1":
-                                setText(ace, aceCardNumber, numberOfCards(aceCardNumber));
-                                break;
-                            case "2":
-                                setText(two, twoCardNumber, numberOfCards(twoCardNumber));
-                                break;
-                            case "3":
-                                setText(three, threeCardNumber, numberOfCards(threeCardNumber));
-                                break;
-                            case "4":
-                                setText(four, fourCardNumber, numberOfCards(fourCardNumber));
-                                break;
-                            case "5":
-                                setText(five, fiveCardNumber, numberOfCards(fiveCardNumber));
-                                break;
-                            case "6":
-                                setText(six, sixCardNumber, numberOfCards(sixCardNumber));
-                                break;
-                            case "7":
-                                setText(seven, sevenCardNumber, numberOfCards(sevenCardNumber));
-                                break;
-                            case "8":
-                                setText(eight, eightCardNumber, numberOfCards(eightCardNumber));
-                                break;
-                            case "9":
-                                setText(nine, nineCardNumber, numberOfCards(nineCardNumber));
-                                break;
-                            case "10":
-                                setText(ten, tenCardNumber, numberOfCards(tenCardNumber));
-                                break;
-                            case "11":
-                                setText(jack, jackCardNumber, numberOfCards(jackCardNumber));
-                                break;
-                            case "12":
-                                setText(queen, queenCardNumber, numberOfCards(queenCardNumber));
-                                break;
-                            case "13":
-                                setText(king, kingCardNumber, numberOfCards(kingCardNumber));
-                                break;
-                            default:
-                                Toast.makeText(GameActivity.this, "Couldn't find card", Toast.LENGTH_SHORT).show();
+            try {
+                if (unluckyPlayer == playerID) {
+                    vibrate.vibrate(400);
+                    gameLog.append("Player " + callerID + " correctly called Player " + unluckyPlayer + "'s BS!\n");
+                        for (int index = 0; index < cardsToReceive.length(); index++) {
+                            String cardReceived = cardsToReceive.get(index).toString();
+                            //String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
+                            switch (cardReceived) {
+                                case "1":
+                                    setText(ace, aceCardNumber, 1);
+                                    break;
+                                case "2":
+                                    setText(two, twoCardNumber, 1);
+                                    break;
+                                case "3":
+                                    setText(three, threeCardNumber, 1);
+                                    break;
+                                case "4":
+                                    setText(four, fourCardNumber, 1);
+                                    break;
+                                case "5":
+                                    setText(five, fiveCardNumber, 1);
+                                    break;
+                                case "6":
+                                    setText(six, sixCardNumber, 1);
+                                    break;
+                                case "7":
+                                    setText(seven, sevenCardNumber, 1);
+                                    break;
+                                case "8":
+                                    setText(eight, eightCardNumber, 1);
+                                    break;
+                                case "9":
+                                    setText(nine, nineCardNumber, 1);
+                                    break;
+                                case "10":
+                                    setText(ten, tenCardNumber, 1);
+                                    break;
+                                case "11":
+                                    setText(jack, jackCardNumber, 1);
+                                    break;
+                                case "12":
+                                    setText(queen, queenCardNumber, 1);
+                                    break;
+                                case "13":
+                                    setText(king, kingCardNumber, 1);
+                                    break;
+                            }
                         }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
@@ -550,60 +599,58 @@ public class GameActivity extends AppCompatActivity {
             // both params the same as above
             
             //use this info to return quantity of cards to player who falsely called BS (callerID)
-            if (callerID == playerID) {
-                vibrate.vibrate(400);
-                gameLog.append("Player " + callerID + " incorrectly called BS!");
-                try {
+            try {
+                if (callerID == playerID) {
+                    vibrate.vibrate(400);
+                    gameLog.append("Player " + callerID + " incorrectly called BS!\n");
                     for (int index = 0; index < cardsToReceive.length(); index++) {
                         String cardReceived = cardsToReceive.get(index).toString();
-                        String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
-                        switch (cardNumber) {
+                        //String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
+                        switch (cardReceived) {
                             case "1":
-                                setText(ace, aceCardNumber, numberOfCards(aceCardNumber));
+                                setText(ace, aceCardNumber, 1);
                                 break;
                             case "2":
-                                setText(two, twoCardNumber, numberOfCards(twoCardNumber));
+                                setText(two, twoCardNumber, 1);
                                 break;
                             case "3":
-                                setText(three, threeCardNumber, numberOfCards(threeCardNumber));
+                                setText(three, threeCardNumber, 1);
                                 break;
                             case "4":
-                                setText(four, fourCardNumber, numberOfCards(fourCardNumber));
+                                setText(four, fourCardNumber, 1);
                                 break;
                             case "5":
-                                setText(five, fiveCardNumber, numberOfCards(fiveCardNumber));
+                                setText(five, fiveCardNumber, 1);
                                 break;
                             case "6":
-                                setText(six, sixCardNumber, numberOfCards(sixCardNumber));
+                                setText(six, sixCardNumber, 1);
                                 break;
                             case "7":
-                                setText(seven, sevenCardNumber, numberOfCards(sevenCardNumber));
+                                setText(seven, sevenCardNumber, 1);
                                 break;
                             case "8":
-                                setText(eight, eightCardNumber, numberOfCards(eightCardNumber));
+                                setText(eight, eightCardNumber, 1);
                                 break;
                             case "9":
-                                setText(nine, nineCardNumber, numberOfCards(nineCardNumber));
+                                setText(nine, nineCardNumber, 1);
                                 break;
                             case "10":
-                                setText(ten, tenCardNumber, numberOfCards(tenCardNumber));
+                                setText(ten, tenCardNumber, 1);
                                 break;
                             case "11":
-                                setText(jack, jackCardNumber, numberOfCards(jackCardNumber));
+                                setText(jack, jackCardNumber, 1);
                                 break;
                             case "12":
-                                setText(queen, queenCardNumber, numberOfCards(queenCardNumber));
+                                setText(queen, queenCardNumber, 1);
                                 break;
                             case "13":
-                                setText(king, kingCardNumber, numberOfCards(kingCardNumber));
+                                setText(king, kingCardNumber, 1);
                                 break;
-                            default:
-                                Toast.makeText(GameActivity.this, "Couldn't find card", Toast.LENGTH_SHORT).show();
                         }
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
