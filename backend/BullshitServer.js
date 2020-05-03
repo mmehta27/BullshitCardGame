@@ -58,9 +58,9 @@ function isBS() {
 io.on('connection', function (socket) {
   //Identify each player with a unique ID
   var playerID = IdAccum;
-  console.log('IdAccum');
+  console.log(IdAccum);
   
-  io.sockets.emit('newPlayer');
+  io.sockets.emit('newPlayer', IdAccum);
   socket.emit('ID', playerID);
   IdAccum++;
  
@@ -75,7 +75,7 @@ io.on('connection', function (socket) {
   //when cards are sent to server, log claim and actual cards individually
   socket.on('update', function(sentCards, claim) {
        console.log('update');
-       console.log('IdAccum');
+       console.log(IdAccum);
        //tell all other players about his claim
        io.sockets.emit('claim', claim, playerID);
        for (var i = 0; i < sentCards.length; i++) {
