@@ -71,6 +71,11 @@ io.on('connection', function (socket) {
   IdAccum = IdAccum % 4;
   // give the player the decks, all but his will be hidden by app
   socket.emit('decks', decks);
+  socket.on('disconnect' function() {
+      io.sockets.emit('playerExit', playerID);
+      IdAccum--;
+      console.log('player left');
+  });
  
   //when cards are sent to server, log claim and actual cards individually
   socket.on('update', function(sentCards, claim) {
