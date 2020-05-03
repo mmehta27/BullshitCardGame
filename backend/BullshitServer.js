@@ -17,11 +17,13 @@ server.listen(4200, ()=>{
 
 var cardsList = new Array();
 for (var i = 1; i <= 13; i++) {
-  cardsList.push(i + "h");
-  cardsList.push(i + "c");
-  cardsList.push(i + "s");
-  cardsList.push(i + "d");
+  cardsList.push(i);
+  cardsList.push(i);
+  cardsList.push(i);
+  cardsList.push(i);
 }
+
+
 
 // partition four random decks amongst four players
 
@@ -36,19 +38,23 @@ for (var i = 0; i < 4; i++) {
     }
 }
 
+console.log(decks);
+
 
 //ID of person to play next
 var IdAccum = 0;
 //last set of deposited cards
-var lastClaim = new Array();
+var lastClaim = "";
 //total central discarded deck
 var discards = new Array();
+
+var cardToPlay = 1;
 
 
 //return false if last claim was false
 function isBS() {
-   for (var i = lastClaim.length - 1; i >= 0; i--) {
-      if (lastClaim[i] != discards[discards.length - lastClaim.length + i]) {
+   for (var i = parseInt(lastClaim.charAt(0)) - 1; i >= 0; i--) {
+      if (parseInt(lastClaim.substring(1)) != discards[discards.length - parseInt(lastClaim.charAt(0)) + i]) {
           return false;
       }
       return true;
@@ -67,6 +73,7 @@ io.on('connection', function (socket) {
   // Four players ready, game can begin
   if (IdAccum === 4) {
    io.sockets.emit('startGame');
+   io.sockets.emit('callPlayer', 0);
   }
   IdAccum = IdAccum % 4;
   // give the player the decks, all but his will be hidden by app
@@ -82,17 +89,24 @@ io.on('connection', function (socket) {
   });
  
   //when cards are sent to server, log claim and actual cards individually
-  socket.on('update', function(sentCards, claim) {
+  socket.on('update', function(sentCards) {
        console.log('update');
        console.log(IdAccum);
+       console.log(sentCards);
+       lastClaim = sentCards.length + "" + cardToPlay;
+       console.log(lastClaim);
        //tell all other players about his claim
-       io.sockets.emit('claim', claim, playerID);
+       io.sockets.emit('claim', lastClaim, playerID);
        for (var i = 0; i < sentCards.length; i++) {
         
          discards.push(sentCards[i]);
        }
        //update state of game
-        lastClaim = claim;
+        if (cardToPlay === 13) {
+          cardToPlay = 1; 
+        } else {
+          cardToPlay ++;
+        }
         IdAccum = playerID + 1;
         IdAccum = IdAccum % 4;
         
@@ -115,6 +129,7 @@ io.on('connection', function (socket) {
        } else {
            //else tell everyone the claim was false, an proclaimer gets all the central cards
            io.sockets.emit('U Fd up M8', discards, playerID);
+          discards = new Array();
        }
     });
  
