@@ -48,6 +48,8 @@ var lastClaim = "";
 //total central discarded deck
 var discards = new Array();
 
+var cardToPlay = 1;
+
 
 //return false if last claim was false
 function isBS() {
@@ -86,19 +88,20 @@ io.on('connection', function (socket) {
   });
  
   //when cards are sent to server, log claim and actual cards individually
-  socket.on('update', function(sentCards, claim) {
+  socket.on('update', function(sentCards) {
        console.log('update');
        console.log(IdAccum);
        console.log(sentCards);
-       console.log(claim);
+       lastClaim = sentCards.length + "" + cardToPlay;
+       console.log(lastClaim);
        //tell all other players about his claim
-       io.sockets.emit('claim', claim, playerID);
+       io.sockets.emit('claim', lastClaim, playerID);
        for (var i = 0; i < sentCards.length; i++) {
         
          discards.push(sentCards[i]);
        }
        //update state of game
-        lastClaim = claim;
+        cardToPlay ++;
         IdAccum = playerID + 1;
         IdAccum = IdAccum % 4;
         
