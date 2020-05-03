@@ -71,6 +71,15 @@ io.on('connection', function (socket) {
   IdAccum = IdAccum % 4;
   // give the player the decks, all but his will be hidden by app
   socket.emit('decks', decks);
+  socket.on('disconnect', function() {
+      io.sockets.emit('playerExit', playerID);
+      IdAccum--;
+      if (IdAccum === -1) {
+         IdAccum = 0;
+      }
+      IdAccum = IdAccum % 4;
+      console.log('player left');
+  });
  
   //when cards are sent to server, log claim and actual cards individually
   socket.on('update', function(sentCards, claim) {
@@ -96,7 +105,11 @@ io.on('connection', function (socket) {
        console.log('BS');
        if (isBS() === true) {
            //is claim is true, tell all players that perpetrater gets his cards back
+           if (IdAccum != 0) {
            io.sockets.emit('bs', (IdAccum - 1) % 4, discards, playerID);
+           } else {
+            io.sockets.emit('bs', 3, discards, playerID);
+           }
            discards = new Array();
            
        } else {
