@@ -130,6 +130,8 @@ io.on('connection', function (socket) {
         }
         IdAccum = playerID + 1;
         IdAccum = IdAccum % 4;
+	  
+        console.log("current stack of discards: " + discards);
         
         //let next player know its his turn to play
         io.sockets.emit('callPlayer', IdAccum);
