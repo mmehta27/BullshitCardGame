@@ -73,7 +73,11 @@ function getNum(cards) {
 function extractCards(cards) {
 	var extracted = new Array();
 	for (var i = 0; i < cards.length; i++) {
-		if (!(isNaN(parseInt(cards.charAt(i))))) {
+		if (i < cards.length - 1 && !(isNaN(parseInt(cards.charAt(i)))) && !(isNaN(parseInt(cards.charAt(i + 1)))) ) {
+			extracted.push(parseInt(cards.substring(i, i + 2))); 
+			i++;
+		}
+		else if (!(isNaN(parseInt(cards.charAt(i))))) {
 			extracted.push(parseInt(cards.charAt(i)));
 		}
 	}
