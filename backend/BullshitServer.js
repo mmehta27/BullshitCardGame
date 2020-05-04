@@ -55,11 +55,31 @@ var cardToPlay = 1;
 function isBS() {
    for (var i = parseInt(lastClaim.charAt(0)) - 1; i >= 0; i--) {
       if (parseInt(lastClaim.substring(1)) != discards[discards.length - parseInt(lastClaim.charAt(0)) + i]) {
-          return false;
+          return true;
       }
-      return true;
+      return false;
    }
 }
+
+function getNum(cards) {
+ var count = 1;
+  for (var i  = 0; i < cards.length; i++) {
+   if (cards.charAt(i) == ',') {
+      count++;
+   }
+ }
+ return count;
+}
+function extractCards(cards) {
+	var extracted = new Array();
+	for (var i = 0; i < cards.length; i++) {
+		if (!(isNaN(parseInt(cards.charAt(i))))) {
+			extracted.push(parseInt(cards.charAt(i)));
+		}
+	}
+	return extracted;
+}
+
 
 io.on('connection', function (socket) {
   //Identify each player with a unique ID
@@ -93,14 +113,11 @@ io.on('connection', function (socket) {
        console.log('update');
        console.log(IdAccum);
        console.log(sentCards);
-       lastClaim = sentCards.length + "" + cardToPlay;
+       lastClaim = getNum(sentCards) + "" + cardToPlay;
        console.log(lastClaim);
        //tell all other players about his claim
        io.sockets.emit('claim', lastClaim, playerID);
-       for (var i = 0; i < sentCards.length; i++) {
-        
-         discards.push(sentCards[i]);
-       }
+       discards.push(extractCards(sentCards));
        //update state of game
         if (cardToPlay === 13) {
           cardToPlay = 1; 
