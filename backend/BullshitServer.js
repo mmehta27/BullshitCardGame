@@ -114,6 +114,7 @@ io.on('connection', function (socket) {
  
   //when cards are sent to server, log claim and actual cards individually
   socket.on('update', function(sentCards) {
+       socket.emit('received');
        console.log('update');
        console.log(IdAccum);
        console.log(sentCards);
@@ -139,6 +140,7 @@ io.on('connection', function (socket) {
     });
   //When a BS claim is made...
   socket.on('bs', function() {
+       socket.emit('got BS');
        console.log('BS');
        if (isBS() === true) {
            //is claim is true, tell all players that perpetrater gets his cards back
