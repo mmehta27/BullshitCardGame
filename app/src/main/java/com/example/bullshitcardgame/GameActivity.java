@@ -63,6 +63,7 @@ public class GameActivity extends AppCompatActivity {
     private ImageView callBS;
     private TextView playerTurn;
     private List<Integer> cardsToSubmit = new ArrayList<>();
+    private List<Integer> cardsToSubmitFinal = new ArrayList<>();
     private int playerID;
 
     @Override
@@ -146,7 +147,8 @@ public class GameActivity extends AppCompatActivity {
         mSocket.on("callPlayer", shouldPlay);
         mSocket.on("bs", onTrueBS);
         mSocket.on("U Fd up M8", onFalseBS);
-        
+        mSocket.on("win", winFunction);
+        mSocket.on("received", onGotCards);
         //Made all cards clickable
         ace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,7 +165,7 @@ public class GameActivity extends AppCompatActivity {
         three.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                howMany(three, threeCardNumber, 2);
+                howMany(three, threeCardNumber, 3);
             }
         });
         four.setOnClickListener(new View.OnClickListener() {
@@ -242,7 +244,6 @@ public class GameActivity extends AppCompatActivity {
             }
         });
     }
-
     private void howMany(final ImageView card, final TextView cardNumber, final int cardType) {
         AlertDialog.Builder buildDialog = new AlertDialog.Builder(GameActivity.this);
         View promptCardNumber = getLayoutInflater().inflate(R.layout.number_of_cards, null, false);
@@ -263,6 +264,7 @@ public class GameActivity extends AppCompatActivity {
                     card.setVisibility(View.INVISIBLE);
                     cardNumber.setVisibility(View.INVISIBLE);
                     //cardsToSubmit.add(cardsSubmit);
+                    //cardsToSubmit.clear();
                     for (int index = 0; index < input; index++) {
                         cardsToSubmit.add(cardType);
                     }
@@ -288,39 +290,55 @@ public class GameActivity extends AppCompatActivity {
         });
     }
 
-    private int numberOfCards(final TextView cardNumber) {
-        if (cardNumber.getVisibility() == View.VISIBLE) {
-            int currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 2));
-            Toast.makeText(GameActivity.this, "Number of Cards: " + currentNumberCards, Toast.LENGTH_LONG).show();
-            return currentNumberCards;
-        } else {
-            return 0;
-        }
+    private void updateBS(final boolean correctBs, final int unluckyId, final int callerID) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (correctBs == true) {
+                    gameLog.append("Player " + callerID + " correctly called Player " + unluckyId + "'s BS!\n");
+                } else {
+                    gameLog.append("Player " + callerID + " incorrectly called a player's BS!\n");
+                }
+            }
+        });
     }
 
     private void setText(final ImageView card, final TextView cardNumber, final int numberOfCards) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (numberOfCards <= 0) {
+                if (numberOfCards == 0) {
                     card.setVisibility(View.INVISIBLE);
-                    //cardNumber.setText("Number of Cards: " + 0);
+                    cardNumber.setText("Number of Cards: " + 0);
                     cardNumber.setVisibility(View.INVISIBLE);
                 } else {
-                    int currentNumberCards = 0;
-                    if (card.getVisibility() == View.INVISIBLE) {
-                        currentNumberCards = numberOfCards;
+                    if (card.getVisibility() == View.VISIBLE) {
+                        int currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 1)) + numberOfCards;
+                        cardNumber.setText("Number of Cards: " + currentNumberCards);
                     } else {
-                        currentNumberCards = Integer.parseInt(cardNumber.getText().toString().substring(cardNumber.getText().toString().length() - 1)) + numberOfCards;
+                        card.setVisibility(View.VISIBLE);
+                        cardNumber.setVisibility(View.VISIBLE);
+                        cardNumber.setText("Number of Cards: " + numberOfCards);
                     }
-                    card.setVisibility(View.VISIBLE);
-                    cardNumber.setVisibility(View.VISIBLE);
-                    cardNumber.setText("Number of Cards: " + currentNumberCards);
+
                 }
             }
         });
     }
-
+    private void checkWin(final int player) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (ace.getVisibility() == View.INVISIBLE && two.getVisibility() == View.INVISIBLE && three.getVisibility() == View.INVISIBLE
+                        && four.getVisibility() == View.INVISIBLE && five.getVisibility() == View.INVISIBLE && six.getVisibility() == View.INVISIBLE
+                        && seven.getVisibility() == View.INVISIBLE && eight.getVisibility() == View.INVISIBLE && nine.getVisibility() == View.INVISIBLE
+                        && ten.getVisibility() == View.INVISIBLE && jack.getVisibility() == View.INVISIBLE && queen.getVisibility() == View.INVISIBLE
+                        && king.getVisibility() == View.INVISIBLE) {
+                    mSocket.emit("win", player);
+                }
+            }
+        });
+    }
     private void updateGameLogGame(final int id, final boolean plural, final String cardNumber, final String card) {
         runOnUiThread(new Runnable() {
             @Override
@@ -349,7 +367,15 @@ public class GameActivity extends AppCompatActivity {
         });
     }
     //Delineate responses to socket messages
-    
+    private void testBS(final String number) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                gameLog.append(number + "\n");
+            }
+        });
+    }
+
      private Emitter.Listener addPlayer = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
@@ -499,7 +525,7 @@ public class GameActivity extends AppCompatActivity {
                 if (Integer.parseInt(claim.substring(0, 1)) <= 1) {
                     updateGameLogGame(IDOfClaim, false, claim.substring(0, 1), cardType);
                 } else {
-                    updateGameLogGame(IDOfClaim, false, claim.substring(0, 1), cardType);
+                    updateGameLogGame(IDOfClaim, true, claim.substring(0, 1), cardType);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -513,6 +539,7 @@ public class GameActivity extends AppCompatActivity {
             int IDtoPlay = (int) args[0];
             //@IDtoPlayer- ID of next player to play; if such matches local ID, notify player to cast cards and play
             try {
+                checkWin(playerID);
                 if (IDtoPlay == playerID) {
                     updatePlayerTurn(true, playerID);
                 } else {
@@ -523,24 +550,36 @@ public class GameActivity extends AppCompatActivity {
             }
         }
     };
-    
+
+    private Emitter.Listener winFunction = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            testBS("Player " + args[0] + "won!");
+            vibrate.vibrate(1000);
+        }
+    };
+
     private Emitter.Listener onTrueBS = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            int unluckyPlayer = (int) args[0];
+            final int unluckyPlayer = (int) args[0];
             JSONArray cardsToReceive = (JSONArray) args[1];
-            int callerID = (int) args[2];
+            final int callerID = (int) args[2];
             //@unluckyPlayer - player to get deck of cards resultant to call
             //@cardsToReceive - JSONArray of card IDs to be taken by unluckyPlayer. Ex: ["1d". "6s", "11d"] for a stack of
             // Ace of diamonds, six of spades and jack of diamonds
             //@callerID - player ID of subject who got justly called on BS
             //use info to update UI gamestate, notify the player that BS call was successful
             try {
+                updateBS(true, unluckyPlayer, callerID);
                 if (unluckyPlayer == playerID) {
                     vibrate.vibrate(400);
-                    gameLog.append("Player " + callerID + " correctly called Player " + unluckyPlayer + "'s BS!\n");
-                        for (int index = 0; index < cardsToReceive.length(); index++) {
-                            String cardReceived = cardsToReceive.get(index).toString();
+                    for (int outer = 0; outer < cardsToReceive.length(); outer++) {
+                        JSONArray cards = cardsToReceive.getJSONArray(outer);
+                        //testBS(cardsToReceive.get(outer).toString());
+                        for (int index = 0; index < cards.length(); index++) {
+                            final String cardReceived = cards.get(index).toString();
+                            //testBS(cardReceived);
                             //String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
                             switch (cardReceived) {
                                 case "1":
@@ -584,6 +623,7 @@ public class GameActivity extends AppCompatActivity {
                                     break;
                             }
                         }
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -600,52 +640,57 @@ public class GameActivity extends AppCompatActivity {
             
             //use this info to return quantity of cards to player who falsely called BS (callerID)
             try {
+                updateBS(false, 0, callerID);
                 if (callerID == playerID) {
                     vibrate.vibrate(400);
-                    gameLog.append("Player " + callerID + " incorrectly called BS!\n");
-                    for (int index = 0; index < cardsToReceive.length(); index++) {
-                        String cardReceived = cardsToReceive.get(index).toString();
-                        //String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
-                        switch (cardReceived) {
-                            case "1":
-                                setText(ace, aceCardNumber, 1);
-                                break;
-                            case "2":
-                                setText(two, twoCardNumber, 1);
-                                break;
-                            case "3":
-                                setText(three, threeCardNumber, 1);
-                                break;
-                            case "4":
-                                setText(four, fourCardNumber, 1);
-                                break;
-                            case "5":
-                                setText(five, fiveCardNumber, 1);
-                                break;
-                            case "6":
-                                setText(six, sixCardNumber, 1);
-                                break;
-                            case "7":
-                                setText(seven, sevenCardNumber, 1);
-                                break;
-                            case "8":
-                                setText(eight, eightCardNumber, 1);
-                                break;
-                            case "9":
-                                setText(nine, nineCardNumber, 1);
-                                break;
-                            case "10":
-                                setText(ten, tenCardNumber, 1);
-                                break;
-                            case "11":
-                                setText(jack, jackCardNumber, 1);
-                                break;
-                            case "12":
-                                setText(queen, queenCardNumber, 1);
-                                break;
-                            case "13":
-                                setText(king, kingCardNumber, 1);
-                                break;
+                    for (int outer = 0; outer < cardsToReceive.length(); outer++) {
+                        JSONArray cards = cardsToReceive.getJSONArray(outer);
+                        //testBS(cardsToReceive.get(outer).toString());
+                        for (int index = 0; index < cards.length(); index++) {
+                            String cardReceived = cards.get(index).toString();
+                            //testBS(cardReceived);
+                            //String cardNumber = cardReceived.substring(0, cardReceived.length() - 1);
+                            switch (cardReceived) {
+                                case "1":
+                                    setText(ace, aceCardNumber, 1);
+                                    break;
+                                case "2":
+                                    setText(two, twoCardNumber, 1);
+                                    break;
+                                case "3":
+                                    setText(three, threeCardNumber, 1);
+                                    break;
+                                case "4":
+                                    setText(four, fourCardNumber, 1);
+                                    break;
+                                case "5":
+                                    setText(five, fiveCardNumber, 1);
+                                    break;
+                                case "6":
+                                    setText(six, sixCardNumber, 1);
+                                    break;
+                                case "7":
+                                    setText(seven, sevenCardNumber, 1);
+                                    break;
+                                case "8":
+                                    setText(eight, eightCardNumber, 1);
+                                    break;
+                                case "9":
+                                    setText(nine, nineCardNumber, 1);
+                                    break;
+                                case "10":
+                                    setText(ten, tenCardNumber, 1);
+                                    break;
+                                case "11":
+                                    setText(jack, jackCardNumber, 1);
+                                    break;
+                                case "12":
+                                    setText(queen, queenCardNumber, 1);
+                                    break;
+                                case "13":
+                                    setText(king, kingCardNumber, 1);
+                                    break;
+                            }
                         }
                     }
                 }
@@ -654,5 +699,11 @@ public class GameActivity extends AppCompatActivity {
             }
         }
     };
-    
+
+    private Emitter.Listener onGotCards = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            cardsToSubmit.clear();
+        }
+    };
 }
